@@ -333,6 +333,10 @@ body {
 .sidebar-footer {
   margin-top: auto;
   padding: 16px 12px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .hint {
@@ -542,11 +546,30 @@ body {
   transform: scale(0.95);
 }
 
-.site-card.drag-over {
-  border-color: var(--primary);
-  border-style: dashed;
-  border-width: 2px;
+.site-card.dragging {
+  opacity: 0;
+}
+
+/* 拖拽占位符：显示被拖走卡片留下的空位 */
+.site-card-placeholder {
   background: var(--primary-soft);
+  border: 2px dashed var(--primary);
+  border-radius: var(--radius);
+  box-shadow: none;
+  opacity: 0.6;
+  pointer-events: none;
+  min-height: 130px;
+}
+
+/* 拖拽时其他卡片用 FLIP 动画让位 */
+.sites-grid.is-dragging .site-card {
+  transition: transform 0.25s var(--ease-out);
+}
+
+.category-item.drop-target {
+  background: var(--primary-soft);
+  border-color: rgba(79, 70, 229, 0.2);
+  color: var(--primary);
 }
 
 .site-icon {
@@ -626,6 +649,57 @@ body {
   border-color: var(--primary);
   background: var(--primary-soft);
   transform: scale(1.1);
+}
+
+/* ===== 自定义浮层提示 ===== */
+.tooltip {
+  position: fixed;
+  z-index: 1000;
+  max-width: 320px;
+  padding: 10px 14px;
+  background: var(--text);
+  color: var(--bg-elevated);
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  box-shadow: var(--shadow-lg);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.2s var(--ease-out), transform 0.2s var(--ease-out);
+  word-break: break-all;
+}
+
+.tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--text);
+}
+
+.tooltip.below::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: var(--text);
+}
+
+.tooltip-title {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.tooltip-url {
+  color: var(--text-muted);
+  font-size: 12px;
 }
 
 /* ===== 空状态 ===== */
@@ -770,6 +844,10 @@ body {
   -webkit-backdrop-filter: blur(8px);
   opacity: 1;
   transition: opacity 0.25s var(--ease-out);
+}
+
+#confirmModal.modal-overlay {
+  z-index: 110;
 }
 
 .modal-overlay[hidden] {
@@ -942,6 +1020,105 @@ body {
   text-align: center;
   color: var(--text-secondary);
   white-space: pre-line;
+}
+
+/* ===== 设置弹窗 ===== */
+.settings-section {
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.settings-section h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.version-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg-subtle);
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: 0;
+}
+
+.settings-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+.settings-desc code {
+  background: var(--bg-subtle);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+}
+
+.settings-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.import-label {
+  cursor: pointer;
+}
+
+.import-label input[type="file"] {
+  display: none;
+}
+
+.checkbox-row {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.checkbox-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.checkbox-row label {
+  margin: 0;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.settings-section .form-row.backup-option {
+  display: none;
+}
+
+.settings-section .form-row.backup-option.visible {
+  display: flex;
+}
+
+.settings-section .form-row {
+  margin-bottom: 14px;
+}
+
+.last-backup {
+  margin-top: 4px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
 /* ===== 滚动条 ===== */

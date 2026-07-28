@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>C-Home 启动页</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=4" />
 </head>
 <body>
   <div class="app">
@@ -26,7 +26,7 @@
       <nav class="sidebar-nav">
         <div class="sidebar-header">
           <span>分类</span>
-          <button class="icon-btn" id="addCategoryBtn" title="新建分类" aria-label="新建分类">
+          <button class="icon-btn" id="addCategoryBtn" aria-label="新建分类">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -38,6 +38,12 @@
 
       <div class="sidebar-footer">
         <span class="hint">拖拽分类可排序</span>
+        <button class="icon-btn" id="settingsBtn" title="设置" aria-label="设置">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
       </div>
     </aside>
 
@@ -175,6 +181,67 @@
     </div>
   </div>
 
-  <script src="js/app.js"></script>
+  <!-- 设置弹窗 -->
+  <div class="modal-overlay" id="settingsModal" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h2>设置 <span class="version-badge" id="versionBadge">v1.1.0</span></h2>
+        <button class="icon-btn" data-action="close-settings-modal" aria-label="关闭">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <section class="settings-section">
+          <h3>数据备份</h3>
+          <p class="settings-desc">导出当前所有分类和站点，或从 JSON 文件恢复。</p>
+          <div class="settings-actions">
+            <button type="button" class="btn" id="exportBtn">导出数据</button>
+            <label class="btn import-label">
+              <span>导入数据</span>
+              <input type="file" id="importInput" accept=".json,application/json" hidden />
+            </label>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <h3>自动备份</h3>
+          <p class="settings-desc">自动保存一份 JSON 到下载目录。可填写相对路径，如 <code>backups/c-home.json</code>。</p>
+          <div class="form-row checkbox-row">
+            <input type="checkbox" id="autoBackupEnabled" />
+            <label for="autoBackupEnabled">启用自动备份</label>
+          </div>
+          <div class="form-row">
+            <label for="autoBackupPath">备份文件路径</label>
+            <input type="text" id="autoBackupPath" placeholder="例如：c-home-backup.json" autocomplete="off" />
+          </div>
+          <div class="form-row">
+            <label for="autoBackupMode">备份时机</label>
+            <select id="autoBackupMode">
+              <option value="onChange">每次数据变更</option>
+              <option value="interval">按间隔时间</option>
+              <option value="daily">每天指定时间</option>
+            </select>
+          </div>
+          <div class="form-row backup-option" id="intervalOption">
+            <label for="autoBackupInterval">间隔时间（分钟）</label>
+            <input type="number" id="autoBackupInterval" min="1" value="30" />
+          </div>
+          <div class="form-row backup-option" id="dailyOption">
+            <label for="autoBackupTime">每天备份时间</label>
+            <input type="time" id="autoBackupTime" value="14:00" />
+          </div>
+          <p class="settings-desc last-backup" id="lastBackupInfo"></p>
+          <div class="settings-actions">
+            <button type="button" class="btn" id="backupNowBtn">立即备份</button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js?v=4"></script>
 </body>
 </html>
