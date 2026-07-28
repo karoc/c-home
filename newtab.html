@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>C-Home 启动页</title>
-  <link rel="stylesheet" href="css/style.css?v=4" />
+  <link rel="stylesheet" href="css/style.css?v=5" />
 </head>
 <body>
   <div class="app">
@@ -185,7 +185,7 @@
   <div class="modal-overlay" id="settingsModal" hidden>
     <div class="modal">
       <div class="modal-header">
-        <h2>设置 <span class="version-badge" id="versionBadge">v1.1.0</span></h2>
+        <h2>设置 <span class="version-badge" id="versionBadge">v1.2.0</span></h2>
         <button class="icon-btn" data-action="close-settings-modal" aria-label="关闭">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -204,6 +204,26 @@
               <input type="file" id="importInput" accept=".json,application/json" hidden />
             </label>
           </div>
+        </section>
+
+        <section class="settings-section">
+          <h3>数据存储位置</h3>
+          <p class="settings-desc">选择数据保存在哪里。同步存储会跟随 Google 账号跨设备同步，但有约 100KB 容量限制。</p>
+          <div class="form-row radio-row" id="storageModeRow">
+            <label class="radio-option">
+              <input type="radio" name="storageMode" value="local" checked />
+              <span>本地存储</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="storageMode" value="sync" />
+              <span>同步存储</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="storageMode" value="both" />
+              <span>本地 + 同步</span>
+            </label>
+          </div>
+          <p class="settings-desc storage-hint" id="storageHint"></p>
         </section>
 
         <section class="settings-section">
@@ -242,6 +262,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=4"></script>
+  <script src="js/app.js?v=5"></script>
 </body>
 </html>

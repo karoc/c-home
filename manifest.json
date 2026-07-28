@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "C-Home 启动页",
-  "version": "1.1.0",
-  "description": "自定义 Chrome 启动页：添加站点、拖拽排序、分类管理。",
+  "version": "1.2.0",
+  "description": "自定义 Chrome 启动页：站点管理、分类组织、拖拽排序、数据导入导出与自动备份、可选本地或同步存储。",
   "chrome_url_overrides": {
     "newtab": "newtab.html"
   },

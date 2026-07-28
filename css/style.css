@@ -1121,6 +1121,35 @@ body {
   color: var(--text-muted);
 }
 
+.radio-row {
+  flex-direction: row !important;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.radio-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.radio-option input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.storage-hint {
+  margin-top: -6px;
+  margin-bottom: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
 /* ===== 滚动条 ===== */
 ::-webkit-scrollbar {
   width: 6px;

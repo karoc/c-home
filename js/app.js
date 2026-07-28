@@ -33,6 +33,7 @@
       autoBackupInterval: 30,     // 分钟
       autoBackupTime: "14:00",    // HH:MM
       lastBackupAt: null,
+      storageMode: "local",       // local | sync | both
     },
   };
 
@@ -154,65 +155,142 @@
   }
 
   // ===== 存储 =====
+  function readFrom(area, key) {
+    return new Promise(function (resolve) {
+      chrome.storage[area].get(key, function (res) { resolve(res[key]); });
+    });
+  }
+
+  function writeTo(area, key, value) {
+    return new Promise(function (resolve) {
+      var data = {};
+      data[key] = value;
+      chrome.storage[area].set(data, function () { resolve(); });
+    });
+  }
+
+  function applySettings(settings) {
+    if (!settings) return;
+    state.settings.autoBackupEnabled = !!settings.autoBackupEnabled;
+    state.settings.autoBackupPath = settings.autoBackupPath || DEFAULT_BACKUP_PATH;
+    state.settings.autoBackupMode = ["onChange", "interval", "daily"].indexOf(settings.autoBackupMode) !== -1 ? settings.autoBackupMode : "onChange";
+    state.settings.autoBackupInterval = Math.max(1, parseInt(settings.autoBackupInterval, 10) || 30);
+    state.settings.autoBackupTime = /^\d{2}:\d{2}$/.test(settings.autoBackupTime || "") ? settings.autoBackupTime : "14:00";
+    state.settings.lastBackupAt = settings.lastBackupAt || null;
+    state.settings.storageMode = ["local", "sync", "both"].indexOf(settings.storageMode) !== -1 ? settings.storageMode : "local";
+  }
+
+  function applyData(data) {
+    if (!data || !data.categories) return false;
+    state.categories = data.categories;
+    state.sites = data.sites || [];
+    state.activeCategoryId = data.activeCategoryId || DEFAULT_CATEGORY_ID;
+    return true;
+  }
+
+  function initDefaultData() {
+    state.categories = [{ id: DEFAULT_CATEGORY_ID, name: DEFAULT_CATEGORY_NAME, order: 0 }];
+    state.sites = [];
+    state.activeCategoryId = DEFAULT_CATEGORY_ID;
+    saveState({ backup: false });
+  }
+
   function loadState() {
     return new Promise(function (resolve) {
-      chrome.storage.local.get([STORAGE_KEY, SETTINGS_KEY], function (res) {
-        var data = res[STORAGE_KEY];
-        if (data && data.categories) {
-          state.categories = data.categories;
-          state.sites = data.sites || [];
-          state.activeCategoryId = data.activeCategoryId || DEFAULT_CATEGORY_ID;
-        } else {
-          // 初始化默认分类
-          state.categories = [{ id: DEFAULT_CATEGORY_ID, name: DEFAULT_CATEGORY_NAME, order: 0 }];
-          state.sites = [];
-          state.activeCategoryId = DEFAULT_CATEGORY_ID;
-          saveState({ backup: false });
-        }
+      // 先读本地设置，确定存储模式
+      readFrom("local", SETTINGS_KEY).then(function (settings) {
+        applySettings(settings);
+        return loadData();
+      }).then(resolve);
+    });
+  }
 
-        var settings = res[SETTINGS_KEY];
-        if (settings) {
-          state.settings.autoBackupEnabled = !!settings.autoBackupEnabled;
-          state.settings.autoBackupPath = settings.autoBackupPath || DEFAULT_BACKUP_PATH;
-          state.settings.autoBackupMode = ["onChange", "interval", "daily"].indexOf(settings.autoBackupMode) !== -1 ? settings.autoBackupMode : "onChange";
-          state.settings.autoBackupInterval = Math.max(1, parseInt(settings.autoBackupInterval, 10) || 30);
-          state.settings.autoBackupTime = /^\d{2}:\d{2}$/.test(settings.autoBackupTime || "") ? settings.autoBackupTime : "14:00";
-          state.settings.lastBackupAt = settings.lastBackupAt || null;
+  function loadData() {
+    return new Promise(function (resolve) {
+      var mode = state.settings.storageMode;
+
+      if (mode === "local") {
+        readFrom("local", STORAGE_KEY).then(function (data) {
+          if (applyData(data)) resolve();
+          else { initDefaultData(); resolve(); }
+        });
+        return;
+      }
+
+      if (mode === "sync") {
+        readFrom("sync", STORAGE_KEY).then(function (data) {
+          if (applyData(data)) resolve();
+          else { initDefaultData(); resolve(); }
+        });
+        return;
+      }
+
+      // both 模式：优先 sync，sync 为空则回退 local，并互相补全
+      readFrom("sync", STORAGE_KEY).then(function (syncData) {
+        if (syncData && syncData.categories) {
+          applyData(syncData);
+          // 顺便把 sync 数据写到 local，保持双份一致
+          writeTo("local", STORAGE_KEY, syncData).then(resolve);
+        } else {
+          readFrom("local", STORAGE_KEY).then(function (localData) {
+            if (localData && localData.categories) {
+              applyData(localData);
+              // local 有数据而 sync 没有，把 local 同步到 sync
+              writeTo("sync", STORAGE_KEY, localData).then(resolve);
+            } else {
+              initDefaultData();
+              resolve();
+            }
+          });
         }
-        resolve();
       });
     });
   }
 
   function saveState(options) {
     options = options || {};
-    return new Promise(function (resolve) {
-      var data = {};
-      data[STORAGE_KEY] = {
-        categories: state.categories,
-        sites: state.sites,
-        activeCategoryId: state.activeCategoryId,
-      };
-      chrome.storage.local.set(data, function () {
-        if (options.backup !== false) autoBackup();
-        resolve();
-      });
+    var data = {
+      categories: state.categories,
+      sites: state.sites,
+      activeCategoryId: state.activeCategoryId,
+    };
+    var mode = state.settings.storageMode;
+    var promises = [];
+
+    if (mode === "local" || mode === "both") {
+      promises.push(writeTo("local", STORAGE_KEY, data));
+    }
+    if (mode === "sync" || mode === "both") {
+      promises.push(writeTo("sync", STORAGE_KEY, data));
+    }
+
+    return Promise.all(promises).then(function () {
+      if (options.backup !== false) autoBackup();
     });
   }
 
   function saveSettings() {
-    return new Promise(function (resolve) {
-      var data = {};
-      data[SETTINGS_KEY] = {
-        autoBackupEnabled: state.settings.autoBackupEnabled,
-        autoBackupPath: state.settings.autoBackupPath,
-        autoBackupMode: state.settings.autoBackupMode,
-        autoBackupInterval: state.settings.autoBackupInterval,
-        autoBackupTime: state.settings.autoBackupTime,
-        lastBackupAt: state.settings.lastBackupAt,
-      };
-      chrome.storage.local.set(data, function () { resolve(); });
-    });
+    var data = {
+      autoBackupEnabled: state.settings.autoBackupEnabled,
+      autoBackupPath: state.settings.autoBackupPath,
+      autoBackupMode: state.settings.autoBackupMode,
+      autoBackupInterval: state.settings.autoBackupInterval,
+      autoBackupTime: state.settings.autoBackupTime,
+      lastBackupAt: state.settings.lastBackupAt,
+      storageMode: state.settings.storageMode,
+    };
+    return writeTo("local", SETTINGS_KEY, data);
+  }
+
+  function storageModeLabel(mode) {
+    if (mode === "local") return "本地存储";
+    if (mode === "sync") return "同步存储";
+    return "本地 + 同步";
+  }
+
+  function migrateStorage(oldMode, newMode) {
+    // 切换时把当前内存数据按新模式写一份，实现迁移
+    return saveState({ backup: false });
   }
 
   // ===== 查询辅助 =====
@@ -561,14 +639,34 @@
 
   // ===== 确认弹窗 =====
   function showConfirm(text, callback) {
+    resetConfirmModal();
     $("confirmText").textContent = text;
     confirmCallback = callback;
     $("confirmModal").hidden = false;
   }
 
+  function showAlert(text, callback) {
+    resetConfirmModal();
+    $("confirmText").textContent = text;
+    confirmCallback = callback || function () {};
+    $("confirmCancel").hidden = true;
+    $("confirmOk").textContent = "知道了";
+    $("confirmOk").classList.remove("danger");
+    $("confirmOk").classList.add("primary");
+    $("confirmModal").hidden = false;
+  }
+
+  function resetConfirmModal() {
+    $("confirmCancel").hidden = false;
+    $("confirmOk").textContent = "确认";
+    $("confirmOk").classList.remove("primary");
+    $("confirmOk").classList.add("danger");
+  }
+
   function closeConfirm() {
     $("confirmModal").hidden = true;
     confirmCallback = null;
+    resetConfirmModal();
   }
 
   // ===== 设置与数据备份 =====
@@ -581,7 +679,23 @@
     $("autoBackupTime").value = state.settings.autoBackupTime;
     updateBackupOptionsVisibility();
     updateLastBackupInfo();
+    updateStorageModeUI();
     $("settingsModal").hidden = false;
+  }
+
+  function updateStorageModeUI() {
+    var mode = state.settings.storageMode;
+    var radios = document.querySelectorAll('input[name="storageMode"]');
+    radios.forEach(function (radio) { radio.checked = radio.value === mode; });
+
+    var hint = $("storageHint");
+    if (mode === "local") {
+      hint.textContent = "数据仅保存在本机，可通过导入/导出功能迁移数据；移除扩展或换设备前请先导出备份。";
+    } else if (mode === "sync") {
+      hint.textContent = "数据会同步到所有登录同一 Google 账号的 Chrome。注意容量限制约 100KB。";
+    } else {
+      hint.textContent = "同时写入本地和同步存储，优先从同步读取；换设备可同步，本机也保留一份副本。";
+    }
   }
 
   function updateBackupOptionsVisibility() {
@@ -648,14 +762,28 @@
           saveState().then(function () {
             renderAll();
             closeSettingsModal();
+            showAlert("导入成功，数据已恢复。", function () {});
           });
         });
       } catch (err) {
-        showConfirm("导入失败：" + (err.message || "文件格式错误"), function () {});
+        showAlert(
+          "导入失败：无法识别该文件。\n\n可能原因：\n" +
+          "1. 选择的不是 C-Home 导出的 JSON 备份文件\n" +
+          "2. 文件已损坏或内容被修改\n" +
+          "3. 备份来自不兼容的旧版本\n\n" +
+          "解决方法：\n" +
+          "• 请重新选择正确的备份文件\n" +
+          "• 或在能正常使用的设备/浏览器上重新导出一份备份",
+          function () {}
+        );
       }
     };
     reader.onerror = function () {
-      showConfirm("导入失败：无法读取文件", function () {});
+      showAlert(
+        "导入失败：无法读取文件。\n\n" +
+        "请检查文件是否存在、是否有读取权限，或尝试重新导出一份备份后再导入。",
+        function () {}
+      );
     };
     reader.readAsText(file);
   }
@@ -779,12 +907,14 @@
     });
   }
 
-  function getInsertIndex(card, clientY) {
+  function getInsertIndex(card, clientX) {
     var children = Array.from(sitesGridEl.children);
     var placeholderIndex = children.indexOf(dragPlaceholder);
     var targetIndex = children.indexOf(card);
     var rect = card.getBoundingClientRect();
-    var after = clientY > rect.top + rect.height / 2;
+    // 以目标卡片的垂直中线为界：光标在左半区插入到前面，右半区插入到后面
+    // 这样左右拖拽的触发阈值对称，都是 50%
+    var after = clientX > rect.left + rect.width / 2;
     var newIndex = after ? targetIndex + 1 : targetIndex;
     if (placeholderIndex !== -1 && newIndex > placeholderIndex) newIndex -= 1;
     return newIndex;
@@ -879,7 +1009,7 @@
       var card = e.target.closest(".site-card");
       if (!card || card === dragPlaceholder) return;
 
-      var newIndex = getInsertIndex(card, e.clientY);
+      var newIndex = getInsertIndex(card, e.clientX);
       var children = Array.from(sitesGridEl.children);
       var placeholderIndex = children.indexOf(dragPlaceholder);
       if (newIndex === placeholderIndex) return;
@@ -1049,6 +1179,26 @@
       state.settings.autoBackupTime = /^\d{2}:\d{2}$/.test(val) ? val : "14:00";
       saveSettings().then(scheduleBackup);
     });
+    document.querySelectorAll('input[name="storageMode"]').forEach(function (radio) {
+      radio.addEventListener("change", function (e) {
+        if (!e.target.checked) return;
+        var newMode = e.target.value;
+        var oldMode = state.settings.storageMode;
+        if (newMode === oldMode) return;
+
+        // 先恢复 UI，等用户确认后再真正切换
+        updateStorageModeUI();
+
+        showConfirm("切换存储位置会把当前数据迁移到「" + storageModeLabel(newMode) + "」，是否继续？", function () {
+          state.settings.storageMode = newMode;
+          updateStorageModeUI();
+          migrateStorage(oldMode, newMode).then(function () {
+            saveSettings();
+            showAlert("存储位置已切换为「" + storageModeLabel(newMode) + "」，当前数据已迁移。", function () {});
+          });
+        });
+      });
+    });
 
     // 搜索
     searchInputEl.addEventListener("input", function () {
@@ -1155,7 +1305,7 @@
 
   // ===== 初始化 =====
   loadState().then(function () {
-    console.log("[C-Home] app.js v4 loaded");
+    console.log("[C-Home] app.js v5 loaded");
     initTooltip();
     bindEvents();
     startClock();
