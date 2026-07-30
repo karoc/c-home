@@ -70,3 +70,24 @@ rollback plan.
 tags: governance, escalation
 
 <!-- jiling:managed:end -->
+
+## 项目约定
+
+### 发版流程
+
+不维护独立的 CHANGELOG.md 文件，更新日志通过 GitHub Releases 管理。
+
+发版步骤：
+
+1. 确认 `manifest.json` 的 `version` 已更新
+2. 提交并推送代码到 `main`
+3. `git tag vX.Y.Z` + `git push origin vX.Y.Z`
+4. `gh release create vX.Y.Z --title "vX.Y.Z - 简述" --notes "..."`（详写新增/优化/修复/破坏性变更）
+
+约束：
+
+- 不要创建或维护 CHANGELOG.md / CHANGELOG-*.md 文件
+- Release notes 写在 GitHub Releases 中，不重复到仓库文件
+- README 的「更新日志」链接指向 `https://github.com/karoc/c-home/releases`
+
+tags: release, workflow
