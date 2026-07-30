@@ -47,7 +47,6 @@ c-home/
 ├── config/settings.json # 云端配置开发参考模板（运行时不读取）
 ├── pics/                # 界面截图
 ├── PLAN.md              # 存储方案设计文档
-├── CHANGELOG.md         # 更新日志
 ├── AGENTS.md            # AI 代理规则
 └── .claude/CLAUDE.md    # Claude 配置
 ```
@@ -97,7 +96,7 @@ c-home/
 
 ## 更新日志
 
-详见 [CHANGELOG.md](./CHANGELOG.md)。
+详见 [GitHub Releases](https://github.com/karoc/c-home/releases)。
 
 ## License
 
