@@ -1,8 +1,10 @@
 # 更新日志
 
+<!-- 维护策略：仅详写最近 2-3 个版本，更早的压成一行摘要。完整提交历史见 git log --oneline。 -->
+
 ## v1.3.0
 
-> 大版本更新：多后端存储、性能优化、设置页重构、图标自定义
+> 多后端存储、性能优化、设置页重构、图标自定义
 
 ### 新增
 
@@ -27,7 +29,7 @@
 
 ### 修复
 
-- **`state.notifyPrefs` 放置错误**：误置于 `state.settings` 内部而非 `state` 顶层，导致启用 Chrome 同步后触发配额错误时扩展崩溃（`Cannot read properties of undefined`）
+- **`state.notifyPrefs` 放置错误**：误置于 `state.settings` 内部而非 `state` 顶层，导致启用 Chrome 同步后触发配额错误时扩展崩溃
 - **`saveState` 等待云端 PUT**：所有 UI 操作的 `saveState().then(renderAll)` 会同步等待网络请求完成，云端慢时操作卡顿
 - **云端写失败导致渲染链断裂**：`Promise.all` 中云端 PUT reject 会让整条 `.then(renderAll)` 链不执行
 - **`chrome.storage.sync.set` 未检查 lastError**：配额错误静默丢数据
@@ -41,24 +43,11 @@
 
 ## v1.2.0
 
-- 新增 Chrome 同步存储选项（local / sync / both）
-- 新增 `showAlert` 操作反馈弹窗
-- 改进导入数据的格式校验与错误提示
+- 新增 Chrome 同步存储选项（local / sync / both）、`showAlert` 操作反馈弹窗、导入数据格式校验与错误提示
 
 ---
 
-## v1.1.0
+## 更早版本
 
-- UI/UX 全面重新设计：玻璃拟态侧边栏、indigo/violet 渐变主色、卡片进入动画
-- FLIP 拖拽排序：占位符 + FLIP 动画，站点卡片可跨分类拖拽迁移
-- 自定义浮层提示（hover 显示完整站点名称/地址）
-- 数据导入导出（JSON）
-- 自动备份：每次变更 / 按间隔 / 每日指定时间
-- 实时时钟与问候语
-- 自适应深色模式
-
----
-
-## v1.0.0
-
-- 初始版本：站点管理、分类组织、卡片网格、Chrome 新标签页替换
+- **v1.1.0** — UI/UX 全面重新设计（玻璃拟态、FLIP 拖拽、深色模式）、数据导入导出、自动备份、实时时钟问候
+- **v1.0.0** — 初始版本：站点管理、分类组织、卡片网格、Chrome 新标签页替换
