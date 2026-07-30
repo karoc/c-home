@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>C-Home 启动页</title>
-  <link rel="stylesheet" href="css/style.css?v=5" />
+  <link rel="stylesheet" href="css/style.css?v=17" />
 </head>
 <body>
   <div class="app">
@@ -124,9 +124,39 @@
         <div class="preview-row">
           <span class="preview-label">图标预览</span>
           <div class="preview-card">
-            <img id="previewIcon" class="preview-icon" alt="" />
+            <div id="previewIcon" class="preview-icon"></div>
             <span id="previewName" class="preview-name">站点名称</span>
           </div>
+        </div>
+        <div class="form-row">
+          <label for="siteIconColor">图标颜色</label>
+          <div class="color-row">
+            <input type="color" id="siteIconColor" value="#4f46e5" />
+            <button type="button" class="btn" id="siteIconColorReset">默认</button>
+            <span class="color-hint">仅影响字母头像底色</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="siteIconEmoji">自定义图标</label>
+          <div class="emoji-quick" id="siteEmojiQuick">
+            <button type="button" data-emoji="⭐">⭐</button>
+            <button type="button" data-emoji="📌">📌</button>
+            <button type="button" data-emoji="🎮">🎮</button>
+            <button type="button" data-emoji="🎵">🎵</button>
+            <button type="button" data-emoji="📚">📚</button>
+            <button type="button" data-emoji="💼">💼</button>
+            <button type="button" data-emoji="🛒">🛒</button>
+            <button type="button" data-emoji="✈️">✈️</button>
+          </div>
+          <div class="icon-custom-row">
+            <input type="text" id="siteIconEmoji" placeholder="或输入 Emoji" maxlength="4" autocomplete="off" />
+            <label class="btn import-label">
+              <span>上传图片</span>
+              <input type="file" id="siteIconFile" accept="image/*" hidden />
+            </label>
+            <button type="button" class="btn" id="siteIconClear">移除</button>
+          </div>
+          <p class="settings-desc icon-hint">自定义图标优先于网站 favicon；上传图片自动压缩到 128×128 以内。</p>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn" data-action="close-site-modal">取消</button>
@@ -138,7 +168,7 @@
 
   <!-- 分类命名弹窗 -->
   <div class="modal-overlay" id="categoryModal" hidden>
-    <div class="modal small">
+    <div class="modal">
       <div class="modal-header">
         <h2 id="categoryModalTitle">新建分类</h2>
         <button class="icon-btn" data-action="close-category-modal" aria-label="关闭">
@@ -152,6 +182,31 @@
         <div class="form-row">
           <label for="categoryName">分类名称</label>
           <input type="text" id="categoryName" required placeholder="例如：工作" autocomplete="off" />
+        </div>
+        <div class="form-row">
+          <label for="categoryColor">分类颜色</label>
+          <div class="color-row">
+            <input type="color" id="categoryColor" value="#4f46e5" />
+            <button type="button" class="btn" id="categoryColorReset">默认</button>
+            <span class="color-hint">影响侧边栏图标与文字</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>图标样式</label>
+          <div class="icon-grid" id="categoryIconGrid"></div>
+        </div>
+        <div class="form-row">
+          <label for="categoryIconEmoji">自定义图标</label>
+          <div class="icon-custom-row">
+            <input type="text" id="categoryIconEmoji" placeholder="输入 Emoji" maxlength="4" autocomplete="off" />
+            <label class="btn import-label">
+              <span>上传图片</span>
+              <input type="file" id="categoryIconFile" accept="image/*" hidden />
+            </label>
+            <button type="button" class="btn" id="categoryIconClear">清除</button>
+            <span class="icon-preview" id="categoryIconPreview"></span>
+          </div>
+          <p class="settings-desc icon-hint">Emoji 或上传图片会覆盖上方图标样式；上传图片自动压缩到 128×128 以内。</p>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn" data-action="close-category-modal">取消</button>
@@ -185,7 +240,7 @@
   <div class="modal-overlay" id="settingsModal" hidden>
     <div class="modal">
       <div class="modal-header">
-        <h2>设置 <span class="version-badge" id="versionBadge">v1.2.0</span></h2>
+        <h2>设置 <span class="version-badge" id="versionBadge">v1.3.0</span></h2>
         <button class="icon-btn" data-action="close-settings-modal" aria-label="关闭">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -193,75 +248,160 @@
           </svg>
         </button>
       </div>
-      <div class="modal-body">
-        <section class="settings-section">
-          <h3>数据备份</h3>
-          <p class="settings-desc">导出当前所有分类和站点，或从 JSON 文件恢复。</p>
-          <div class="settings-actions">
-            <button type="button" class="btn" id="exportBtn">导出数据</button>
-            <label class="btn import-label">
-              <span>导入数据</span>
-              <input type="file" id="importInput" accept=".json,application/json" hidden />
-            </label>
-          </div>
-        </section>
+      <div class="settings-layout">
+        <nav class="settings-nav" aria-label="设置分类">
+          <button type="button" class="settings-nav-item active" data-settings-tab="storage">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+            </svg>
+            <span>数据存储</span>
+          </button>
+          <button type="button" class="settings-nav-item" data-settings-tab="cloud">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+            </svg>
+            <span>云端配置</span>
+          </button>
+          <button type="button" class="settings-nav-item" data-settings-tab="backup">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="21 8 21 21 3 21 3 8"></polyline>
+              <rect x="1" y="3" width="22" height="5"></rect>
+              <line x1="10" y1="12" x2="14" y2="12"></line>
+            </svg>
+            <span>备份与恢复</span>
+          </button>
+        </nav>
 
-        <section class="settings-section">
-          <h3>数据存储位置</h3>
-          <p class="settings-desc">选择数据保存在哪里。同步存储会跟随 Google 账号跨设备同步，但有约 100KB 容量限制。</p>
-          <div class="form-row radio-row" id="storageModeRow">
-            <label class="radio-option">
-              <input type="radio" name="storageMode" value="local" checked />
-              <span>本地存储</span>
-            </label>
-            <label class="radio-option">
-              <input type="radio" name="storageMode" value="sync" />
-              <span>同步存储</span>
-            </label>
-            <label class="radio-option">
-              <input type="radio" name="storageMode" value="both" />
-              <span>本地 + 同步</span>
-            </label>
-          </div>
-          <p class="settings-desc storage-hint" id="storageHint"></p>
-        </section>
+        <div class="settings-panels">
+          <!-- 数据存储面板 -->
+          <section class="settings-panel active" data-settings-panel="storage">
+            <h3 class="settings-panel-title">数据存储位置</h3>
+            <p class="settings-desc">可多选：数据会同时写入所有勾选的位置。读取按 云端 -&gt; 同步 -&gt; 本地 优先。本地 IndexedDB 容量可达磁盘级；同步约 100KB 限制；WebDAV/Gist 为云端跨设备，勾选后在「云端配置」页填写凭证。</p>
+            <div class="form-row radio-row" id="storageBackendRow">
+              <label class="radio-option">
+                <input type="checkbox" name="storageBackend" value="local" checked />
+                <span>IndexedDB 本地</span>
+              </label>
+              <label class="radio-option">
+                <input type="checkbox" name="storageBackend" value="sync" />
+                <span>Chrome 同步</span>
+              </label>
+              <label class="radio-option">
+                <input type="checkbox" name="storageBackend" value="cloud" />
+                <span>WebDAV 云端</span>
+              </label>
+              <label class="radio-option">
+                <input type="checkbox" name="storageBackend" value="gist" />
+                <span>GitHub Gist</span>
+              </label>
+            </div>
+            <p class="settings-desc storage-hint" id="storageHint"></p>
+          </section>
 
-        <section class="settings-section">
-          <h3>自动备份</h3>
-          <p class="settings-desc">自动保存一份 JSON 到下载目录。可填写相对路径，如 <code>backups/c-home.json</code>。</p>
-          <div class="form-row checkbox-row">
-            <input type="checkbox" id="autoBackupEnabled" />
-            <label for="autoBackupEnabled">启用自动备份</label>
-          </div>
-          <div class="form-row">
-            <label for="autoBackupPath">备份文件路径</label>
-            <input type="text" id="autoBackupPath" placeholder="例如：c-home-backup.json" autocomplete="off" />
-          </div>
-          <div class="form-row">
-            <label for="autoBackupMode">备份时机</label>
-            <select id="autoBackupMode">
-              <option value="onChange">每次数据变更</option>
-              <option value="interval">按间隔时间</option>
-              <option value="daily">每天指定时间</option>
-            </select>
-          </div>
-          <div class="form-row backup-option" id="intervalOption">
-            <label for="autoBackupInterval">间隔时间（分钟）</label>
-            <input type="number" id="autoBackupInterval" min="1" value="30" />
-          </div>
-          <div class="form-row backup-option" id="dailyOption">
-            <label for="autoBackupTime">每天备份时间</label>
-            <input type="time" id="autoBackupTime" value="14:00" />
-          </div>
-          <p class="settings-desc last-backup" id="lastBackupInfo"></p>
-          <div class="settings-actions">
-            <button type="button" class="btn" id="backupNowBtn">立即备份</button>
-          </div>
-        </section>
+          <!-- 云端配置面板 -->
+          <section class="settings-panel" data-settings-panel="cloud">
+            <p class="settings-desc">云端凭证仅保存在本机 chrome.storage.local，不会上传到其他位置。WebDAV 与 GitHub Gist 分别独立配置。</p>
+            <div class="cloud-empty" id="cloudEmptyHint" hidden>
+              <p>未启用任何云端存储。可先在「数据存储」中勾选 WebDAV 云端或 GitHub Gist。</p>
+              <button type="button" class="btn" id="gotoStorageTabBtn">前往数据存储</button>
+            </div>
+            <div class="cloud-block" id="webdavBlock" hidden>
+              <div class="form-row checkbox-row">
+                <input type="checkbox" id="webdavEnabled" />
+                <label for="webdavEnabled">启用 WebDAV</label>
+              </div>
+              <div class="form-row">
+                <label for="webdavUrl">WebDAV 地址</label>
+                <input type="text" id="webdavUrl" placeholder="例如：https://dav.example.com/remote.php/dav/files/user/" autocomplete="off" />
+              </div>
+              <div class="form-row">
+                <label for="webdavPath">远端路径</label>
+                <input type="text" id="webdavPath" placeholder="/c-home/" autocomplete="off" />
+              </div>
+              <div class="form-row-pair">
+                <div class="form-row">
+                  <label for="webdavUsername">用户名</label>
+                  <input type="text" id="webdavUsername" autocomplete="off" />
+                </div>
+                <div class="form-row">
+                  <label for="webdavPassword">密码</label>
+                  <input type="password" id="webdavPassword" autocomplete="off" />
+                </div>
+              </div>
+            </div>
+            <div class="cloud-block" id="gistBlock" hidden>
+              <div class="form-row checkbox-row">
+                <input type="checkbox" id="gistEnabled" />
+                <label for="gistEnabled">启用 GitHub Gist</label>
+              </div>
+              <div class="form-row">
+                <label for="gistToken">GitHub Token</label>
+                <input type="password" id="gistToken" placeholder="ghp_..." autocomplete="off" />
+              </div>
+              <div class="form-row">
+                <label for="gistId">Gist ID（留空则自动新建）</label>
+                <input type="text" id="gistId" placeholder="可选" autocomplete="off" />
+              </div>
+            </div>
+          </section>
+
+          <!-- 备份与恢复面板 -->
+          <section class="settings-panel" data-settings-panel="backup">
+            <div class="settings-section">
+              <h3>数据备份</h3>
+              <p class="settings-desc">导出当前所有分类和站点，或从 JSON 文件恢复。</p>
+              <div class="settings-actions">
+                <button type="button" class="btn" id="exportBtn">导出数据</button>
+                <label class="btn import-label">
+                  <span>导入数据</span>
+                  <input type="file" id="importInput" accept=".json,application/json" hidden />
+                </label>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <h3>自动备份</h3>
+              <p class="settings-desc">自动保存一份 JSON 到下载目录。可填写相对路径，如 <code>backups/c-home.json</code>。</p>
+              <div class="form-row checkbox-row">
+                <input type="checkbox" id="autoBackupEnabled" />
+                <label for="autoBackupEnabled">启用自动备份</label>
+              </div>
+              <div class="form-row">
+                <label for="autoBackupPath">备份文件路径</label>
+                <input type="text" id="autoBackupPath" placeholder="例如：c-home-backup.json" autocomplete="off" />
+              </div>
+              <div class="form-row">
+                <label for="autoBackupMode">备份时机</label>
+                <select id="autoBackupMode">
+                  <option value="onChange">每次数据变更</option>
+                  <option value="interval">按间隔时间</option>
+                  <option value="daily">每天指定时间</option>
+                </select>
+              </div>
+              <div class="form-row backup-option" id="intervalOption">
+                <label for="autoBackupInterval">间隔时间（分钟）</label>
+                <input type="number" id="autoBackupInterval" min="1" value="30" />
+              </div>
+              <div class="form-row backup-option" id="dailyOption">
+                <label for="autoBackupTime">每天备份时间</label>
+                <input type="time" id="autoBackupTime" value="14:00" />
+              </div>
+              <p class="settings-desc last-backup" id="lastBackupInfo"></p>
+              <div class="settings-actions">
+                <button type="button" class="btn" id="backupNowBtn">立即备份</button>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   </div>
 
-  <script src="js/app.js?v=5"></script>
+  <!-- 全局提示 Toast（堆叠，最新在底部） -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <script src="js/app.js?v=17"></script>
 </body>
 </html>

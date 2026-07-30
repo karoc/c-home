@@ -1,0 +1,16 @@
+{
+  "webdav": {
+    "enabled": false,
+    "url": "https://dav.example.com/",
+    "username": "your@email.com",
+    "password": "yourpassword",
+    "path": "/c-home/",
+    "basicAuth": true
+  },
+  "gist": {
+    "enabled": false,
+    "gistId": "your_gist_id",
+    "token": "ghp_xxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "version": "1.0"
+}
