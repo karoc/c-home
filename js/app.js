@@ -96,6 +96,7 @@
       autoBackupInterval: 30,     // 分钟
       autoBackupTime: "14:00",    // HH:MM
       lastBackupAt: null,
+      openInCurrentTab: true,     // 点击站点在当前页打开；false 则新标签页打开
       storageBackends: { local: true, sync: false, cloud: false, gist: false },
     },
     dataUpdatedAt: null, // 数据快照的最后写入时间（last-write-wins 用）
@@ -144,6 +145,14 @@
   function displayHost(url) {
     var host = hostnameOf(url);
     return host.replace(/^www\./, "");
+  }
+
+  function openSiteUrl(url) {
+    if (state.settings.openInCurrentTab) {
+      location.assign(url);
+    } else {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
   }
 
   // 站点默认图标：优先用站点真实 favicon，失败回退到字母头像
@@ -424,6 +433,7 @@
     state.settings.autoBackupInterval = Math.max(1, parseInt(settings.autoBackupInterval, 10) || 30);
     state.settings.autoBackupTime = /^\d{2}:\d{2}$/.test(settings.autoBackupTime || "") ? settings.autoBackupTime : "14:00";
     state.settings.lastBackupAt = settings.lastBackupAt || null;
+    state.settings.openInCurrentTab = settings.openInCurrentTab !== false;
     applyStorageBackends(settings);
   }
 
@@ -763,6 +773,7 @@
       autoBackupInterval: state.settings.autoBackupInterval,
       autoBackupTime: state.settings.autoBackupTime,
       lastBackupAt: state.settings.lastBackupAt,
+      openInCurrentTab: state.settings.openInCurrentTab,
       storageBackends: cloneBackends(state.settings.storageBackends),
     };
     return writeTo("local", SETTINGS_KEY, data);
@@ -1299,6 +1310,7 @@
   // ===== 设置与数据备份 =====
   function openSettingsModal() {
     $("versionBadge").textContent = "v" + VERSION;
+    $("openInCurrentTab").checked = state.settings.openInCurrentTab;
     $("autoBackupEnabled").checked = state.settings.autoBackupEnabled;
     $("autoBackupPath").value = state.settings.autoBackupPath;
     $("autoBackupMode").value = state.settings.autoBackupMode;
@@ -1308,7 +1320,7 @@
     updateLastBackupInfo();
     populateCloudConfigUI();
     updateStorageUI();
-    switchSettingsTab("storage");
+    switchSettingsTab("general");
     $("settingsModal").hidden = false;
   }
 
@@ -1742,7 +1754,7 @@
       var card = e.target.closest(".site-card");
       if (!card) return;
       var url = card.getAttribute("data-url");
-      if (url) window.open(url, "_blank", "noopener,noreferrer");
+      if (url) openSiteUrl(url);
     });
   }
 
@@ -1879,6 +1891,10 @@
       state.settings.autoBackupEnabled = e.target.checked;
       saveSettings().then(scheduleBackup);
     });
+    $("openInCurrentTab").addEventListener("change", function (e) {
+      state.settings.openInCurrentTab = e.target.checked;
+      saveSettings();
+    });
     $("autoBackupPath").addEventListener("input", function (e) {
       state.settings.autoBackupPath = e.target.value.trim() || DEFAULT_BACKUP_PATH;
       debouncedSaveSettings();
@@ -1942,7 +1958,7 @@
       var card = e.target.closest(".site-card");
       if (card && !e.target.closest(".site-actions")) {
         var url = card.getAttribute("data-url");
-        if (url) window.open(url, "_blank", "noopener,noreferrer");
+        if (url) openSiteUrl(url);
         return;
       }
 

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>C-Home 启动页</title>
-  <link rel="stylesheet" href="css/style.css?v=17" />
+  <link rel="stylesheet" href="css/style.css?v=18" />
 </head>
 <body>
   <div class="app">
@@ -250,7 +250,21 @@
       </div>
       <div class="settings-layout">
         <nav class="settings-nav" aria-label="设置分类">
-          <button type="button" class="settings-nav-item active" data-settings-tab="storage">
+          <button type="button" class="settings-nav-item active" data-settings-tab="general">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" y1="21" x2="4" y2="14"></line>
+              <line x1="4" y1="10" x2="4" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12" y2="3"></line>
+              <line x1="20" y1="21" x2="20" y2="16"></line>
+              <line x1="20" y1="12" x2="20" y2="3"></line>
+              <line x1="1" y1="14" x2="7" y2="14"></line>
+              <line x1="9" y1="8" x2="15" y2="8"></line>
+              <line x1="17" y1="16" x2="23" y2="16"></line>
+            </svg>
+            <span>通用</span>
+          </button>
+          <button type="button" class="settings-nav-item" data-settings-tab="storage">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
               <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
@@ -275,8 +289,19 @@
         </nav>
 
         <div class="settings-panels">
+          <!-- 通用面板 -->
+          <section class="settings-panel active" data-settings-panel="general">
+            <h3 class="settings-panel-title">通用</h3>
+            <p class="settings-desc">控制点击站点卡片时的打开方式。</p>
+            <div class="form-row checkbox-row">
+              <input type="checkbox" id="openInCurrentTab" checked />
+              <label for="openInCurrentTab">在当前页打开站点</label>
+            </div>
+            <p class="settings-desc">勾选后点击站点在当前标签页跳转；取消勾选则在新标签页打开。</p>
+          </section>
+
           <!-- 数据存储面板 -->
-          <section class="settings-panel active" data-settings-panel="storage">
+          <section class="settings-panel" data-settings-panel="storage">
             <h3 class="settings-panel-title">数据存储位置</h3>
             <p class="settings-desc">可多选：数据会同时写入所有勾选的位置。读取按 云端 -&gt; 同步 -&gt; 本地 优先。本地 IndexedDB 容量可达磁盘级；同步约 100KB 限制；WebDAV/Gist 为云端跨设备，勾选后在「云端配置」页填写凭证。</p>
             <div class="form-row radio-row" id="storageBackendRow">
@@ -402,6 +427,6 @@
   <!-- 全局提示 Toast（堆叠，最新在底部） -->
   <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 
-  <script src="js/app.js?v=17"></script>
+  <script src="js/app.js?v=18"></script>
 </body>
 </html>
