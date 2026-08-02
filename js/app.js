@@ -9,7 +9,7 @@
   var DEFAULT_CATEGORY_ID = "default";
   var DEFAULT_CATEGORY_NAME = "默认";
   var DEFAULT_BACKUP_PATH = "c-home-backup.json";
-  var VERSION = "1.3.0";
+  var VERSION = "1.4.0";
 
   // 分类内置图标库（feather 风格）
   var BUILTIN_CAT_ICONS = {
