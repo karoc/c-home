@@ -320,12 +320,6 @@
     }
   }
 
-  function loadCloudConfig() {
-    return readFrom("local", CLOUD_CONFIG_KEY).then(function (cfg) {
-      applyCloudConfig(cfg);
-    });
-  }
-
   function saveCloudConfig() {
     return writeTo("local", CLOUD_CONFIG_KEY, state.cloudConfig);
   }
@@ -475,12 +469,17 @@
   }
 
   function loadState() {
-    return readFrom("local", SETTINGS_KEY).then(function (settings) {
-      applySettings(settings);
-      return loadCloudConfig();
-    }).then(function () {
-      return loadNotifyPrefs();
-    }).then(function () {
+    return Promise.all([
+      readFrom("local", SETTINGS_KEY),
+      readFrom("local", CLOUD_CONFIG_KEY),
+      readFrom("local", NOTIFY_PREFS_KEY),
+    ]).then(function (r) {
+      applySettings(r[0]);
+      applyCloudConfig(r[1]);
+      if (r[2]) {
+        state.notifyPrefs.syncQuotaUntil = r[2].syncQuotaUntil || 0;
+        state.notifyPrefs.syncQuotaForever = !!r[2].syncQuotaForever;
+      }
       requestPersistentStorage();
       return loadData();
     });
@@ -512,7 +511,10 @@
   }
 
   function readSafe(b) {
-    return readFromBackend(b).catch(function () { return null; });
+    return readFromBackend(b).catch(function (err) {
+      console.error("[C-Home] read " + b + " failed:", err && err.message);
+      return null;
+    });
   }
 
   // 串行尝试一组后端，返回第一个有效数据，都没有则 null
@@ -667,15 +669,6 @@
   var SYNC_QUOTA_BYTES = 102400; // chrome.storage.sync 总配额 100KB
   var SYNC_WARN_RATIO = 0.8;     // 用量达到 80% 提前预警
   var syncQuotaAlertShown = false; // 本次会话内只主动提醒一次（同步成功后重置）
-
-  function loadNotifyPrefs() {
-    return readFrom("local", NOTIFY_PREFS_KEY).then(function (p) {
-      if (p) {
-        state.notifyPrefs.syncQuotaUntil = p.syncQuotaUntil || 0;
-        state.notifyPrefs.syncQuotaForever = !!p.syncQuotaForever;
-      }
-    });
-  }
 
   function saveNotifyPrefs() {
     return writeTo("local", NOTIFY_PREFS_KEY, state.notifyPrefs);
@@ -1101,7 +1094,8 @@
     state.activeCategoryId = id;
     state.search = "";
     searchInputEl.value = "";
-    saveState({ backup: false }).then(renderAll);
+    renderAll();
+    saveState({ backup: false });
   }
 
   // ===== 站点操作 =====
@@ -2119,12 +2113,15 @@
   }
 
   // ===== 初始化 =====
+  initTooltip();
+  bindEvents();
+  startClock();
+  renderAll();
   loadState().then(function () {
-    console.log("[C-Home] app.js v5 loaded");
-    initTooltip();
-    bindEvents();
-    startClock();
     scheduleBackup();
     renderAll();
+    console.log("[C-Home] app.js v5 loaded");
+  }).catch(function (err) {
+    console.error("[C-Home] load failed:", err && err.message);
   });
 })();
